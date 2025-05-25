@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
-import { Smile, Paperclip, Send, X, ImageIcon } from "lucide-react"
+import { Smile, Paperclip, Send, X, ImageIcon, Loader } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import useSendMessage from "@/hooks/App/SendMessageHook"
@@ -211,7 +211,7 @@ const MessageInput: React.FC = () => {
           aria-label="Send message"
         >
           {isLoading ? (
-            <div className="size-5 rounded-full border-2 border-slate-400 border-t-transparent animate-spin"></div>
+            <Loader className="animate-spin" size={15} />
           ) : (
             <Send className="h-5 w-5" />
           )}
