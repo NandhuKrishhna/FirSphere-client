@@ -1,5 +1,3 @@
-import { UserQueryParams } from "@/types/userTypes";
-import { apiSlice } from "./EntryApiSlice";
 import {
   GetDoctorsResponse,
   GetUsersResponse,
@@ -8,12 +6,14 @@ import {
   ISubscription,
   ISubscriptionResponse,
   IUpdateSubscriptionResponse,
-  UpdadedUserResponse
+  UpdadedUserResponse,
 } from "@/types/api/admin-api-types";
+
 import { Roles } from "@/utils/Enums";
+import { UserQueryParams } from "@/types/userTypes";
+import { apiSlice } from "./EntryApiSlice";
 
-
-
+// Adding this comment for testing deploy scripts
 export const adminApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     adminLogin: builder.mutation({
@@ -38,7 +38,10 @@ export const adminApi = apiSlice.injectEndpoints({
       },
       providesTags: ["users"],
     }),
-    getAllDoctors: builder.query<GetDoctorsResponse, UserQueryParams | undefined>({
+    getAllDoctors: builder.query<
+      GetDoctorsResponse,
+      UserQueryParams | undefined
+    >({
       query: (params: UserQueryParams) => {
         const { ...queryParams } = params;
         const queryString = Object.entries(queryParams)
@@ -88,32 +91,48 @@ export const adminApi = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
-    unblockUsers: builder.mutation<UpdadedUserResponse, { id: string; role: string; queryParams?: UserQueryParams }>({
+    unblockUsers: builder.mutation<
+      UpdadedUserResponse,
+      { id: string; role: string; queryParams?: UserQueryParams }
+    >({
       query: (data) => ({
         url: "/admin/unblock-user",
         method: "POST",
         body: data,
       }),
-      async onQueryStarted({ id, role, queryParams }, { dispatch, queryFulfilled }) {
+      async onQueryStarted(
+        { id, role, queryParams },
+        { dispatch, queryFulfilled },
+      ) {
         let patchResult;
         try {
           if (role === Roles.USER) {
             patchResult = dispatch(
-              adminApi.util.updateQueryData("getAllUsers", queryParams, (draft) => {
-                const user = draft.users?.users?.find((u) => u._id === id);
-                if (user) {
-                  user.status = "active";
-                }
-              })
+              adminApi.util.updateQueryData(
+                "getAllUsers",
+                queryParams,
+                (draft) => {
+                  const user = draft.users?.users?.find((u) => u._id === id);
+                  if (user) {
+                    user.status = "active";
+                  }
+                },
+              ),
             );
           } else {
             patchResult = dispatch(
-              adminApi.util.updateQueryData("getAllDoctors", queryParams, (draft) => {
-                const doctor = draft.doctors?.doctors?.find((d) => d._id === id);
-                if (doctor) {
-                  doctor.status = "active";
-                }
-              })
+              adminApi.util.updateQueryData(
+                "getAllDoctors",
+                queryParams,
+                (draft) => {
+                  const doctor = draft.doctors?.doctors?.find(
+                    (d) => d._id === id,
+                  );
+                  if (doctor) {
+                    doctor.status = "active";
+                  }
+                },
+              ),
             );
           }
           await queryFulfilled;
@@ -122,32 +141,48 @@ export const adminApi = apiSlice.injectEndpoints({
         }
       },
     }),
-    blockUsers: builder.mutation<UpdadedUserResponse, { id: string; role: string; queryParams?: UserQueryParams }>({
+    blockUsers: builder.mutation<
+      UpdadedUserResponse,
+      { id: string; role: string; queryParams?: UserQueryParams }
+    >({
       query: (data) => ({
         url: "/admin/block-user",
         method: "POST",
         body: data,
       }),
-      async onQueryStarted({ id, role, queryParams }, { dispatch, queryFulfilled }) {
+      async onQueryStarted(
+        { id, role, queryParams },
+        { dispatch, queryFulfilled },
+      ) {
         let patchResult;
         try {
           if (role === Roles.USER) {
             patchResult = dispatch(
-              adminApi.util.updateQueryData("getAllUsers", queryParams, (draft) => {
-                const user = draft.users?.users?.find((u) => u._id === id);
-                if (user) {
-                  user.status = "blocked";
-                }
-              })
+              adminApi.util.updateQueryData(
+                "getAllUsers",
+                queryParams,
+                (draft) => {
+                  const user = draft.users?.users?.find((u) => u._id === id);
+                  if (user) {
+                    user.status = "blocked";
+                  }
+                },
+              ),
             );
           } else {
             patchResult = dispatch(
-              adminApi.util.updateQueryData("getAllDoctors", queryParams, (draft) => {
-                const doctor = draft.doctors?.doctors?.find((d) => d._id === id);
-                if (doctor) {
-                  doctor.status = "blocked";
-                }
-              })
+              adminApi.util.updateQueryData(
+                "getAllDoctors",
+                queryParams,
+                (draft) => {
+                  const doctor = draft.doctors?.doctors?.find(
+                    (d) => d._id === id,
+                  );
+                  if (doctor) {
+                    doctor.status = "blocked";
+                  }
+                },
+              ),
             );
           }
           await queryFulfilled;
@@ -164,26 +199,38 @@ export const adminApi = apiSlice.injectEndpoints({
       }),
       async onQueryStarted(newSubscription, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          adminApi.util.updateQueryData("getAllSubcription", undefined, (draft) => {
-            draft.subscriptionPlan.push(newSubscription);
-          })
+          adminApi.util.updateQueryData(
+            "getAllSubcription",
+            undefined,
+            (draft) => {
+              draft.subscriptionPlan.push(newSubscription);
+            },
+          ),
         );
 
         try {
-
           const { data: createdSubscription } = await queryFulfilled;
           patchResult.undo();
           dispatch(
-            adminApi.util.updateQueryData("getAllSubcription", undefined, (draft) => {
-              draft.subscriptionPlan.push(createdSubscription.newPremiumSubscription);
-            })
+            adminApi.util.updateQueryData(
+              "getAllSubcription",
+              undefined,
+              (draft) => {
+                draft.subscriptionPlan.push(
+                  createdSubscription.newPremiumSubscription,
+                );
+              },
+            ),
           );
         } catch (error) {
           console.error("Add subscription mutation failed:", error);
         }
       },
     }),
-    editSubcription: builder.mutation<IUpdateSubscriptionResponse, ISubscription>({
+    editSubcription: builder.mutation<
+      IUpdateSubscriptionResponse,
+      ISubscription
+    >({
       query: (data) => ({
         url: "/admin/edit-subcription-plan",
         method: "PUT",
@@ -191,34 +238,49 @@ export const adminApi = apiSlice.injectEndpoints({
       }),
       async onQueryStarted(updatedSubscription, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          adminApi.util.updateQueryData("getAllSubcription", undefined, (draft) => {
-            if (!draft?.subscriptionPlan) return;
-            const subscriptionIndex = draft.subscriptionPlan.findIndex((subscription) => subscription._id === updatedSubscription._id);
-            if (subscriptionIndex !== -1) {
-              draft.subscriptionPlan[subscriptionIndex] = {
-                ...draft.subscriptionPlan[subscriptionIndex],
-                ...updatedSubscription
+          adminApi.util.updateQueryData(
+            "getAllSubcription",
+            undefined,
+            (draft) => {
+              if (!draft?.subscriptionPlan) return;
+              const subscriptionIndex = draft.subscriptionPlan.findIndex(
+                (subscription) => subscription._id === updatedSubscription._id,
+              );
+              if (subscriptionIndex !== -1) {
+                draft.subscriptionPlan[subscriptionIndex] = {
+                  ...draft.subscriptionPlan[subscriptionIndex],
+                  ...updatedSubscription,
+                };
               }
-            }
-          })
+            },
+          ),
         );
         try {
           await queryFulfilled;
         } catch {
           patchResult.undo();
         }
-      }
+      },
     }),
-    deleteSubcription: builder.mutation<{ success: boolean, message: string }, string>({
+    deleteSubcription: builder.mutation<
+      { success: boolean; message: string },
+      string
+    >({
       query: (id) => ({
         url: `/admin/delete-subscription-plan/${id}`,
         method: "DELETE",
       }),
       async onQueryStarted(id, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          adminApi.util.updateQueryData("getAllSubcription", undefined, (draft) => {
-            draft.subscriptionPlan = draft.subscriptionPlan.filter((sub) => sub._id !== id);
-          })
+          adminApi.util.updateQueryData(
+            "getAllSubcription",
+            undefined,
+            (draft) => {
+              draft.subscriptionPlan = draft.subscriptionPlan.filter(
+                (sub) => sub._id !== id,
+              );
+            },
+          ),
         );
         try {
           await queryFulfilled;
@@ -240,9 +302,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: "GET",
       }),
     }),
-
   }),
-
 });
 
 export const {
@@ -260,5 +320,5 @@ export const {
   useEditSubcriptionMutation,
   useDeleteSubcriptionMutation,
   useGetAllSubcriptionQuery,
-  useAdminDashboardQuery
+  useAdminDashboardQuery,
 } = adminApi;
